@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
-import Pages from 'vite-plugin-pages'; // https://github.com/hannoeru/vite-plugin-pages
 import Components from 'unplugin-vue-components/vite'; // https://github.com/antfu/unplugin-vue-components
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import path from 'path';
@@ -25,9 +24,6 @@ export default defineConfig({
   },
   plugins: [
     Vue(),
-    Pages({
-      nuxtStyle: true,
-    }),
     Components({
       dts: true,
       extensions: ['vue', 'ts'],

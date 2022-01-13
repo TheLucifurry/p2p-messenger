@@ -4,7 +4,18 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
+    Chat: typeof import('./src/components/Chat.vue')['default']
+    ChatEvent: typeof import('./src/components/ChatEvent.vue')['default']
+    ChatMessage: typeof import('./src/components/ChatMessage.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    Main: typeof import('./src/components/Main.vue')['default']
+    NButton: typeof import('naive-ui')['NButton']
+    NCard: typeof import('naive-ui')['NCard']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NGlobalStyle: typeof import('naive-ui')['NGlobalStyle']
+    NIcon: typeof import('naive-ui')['NIcon']
+    NInput: typeof import('naive-ui')['NInput']
+    NTime: typeof import('naive-ui')['NTime']
   }
 }
 

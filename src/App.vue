@@ -1,18 +1,39 @@
 <script setup lang="ts">
+import { darkTheme, GlobalThemeOverrides } from 'naive-ui';
+
+const mainTheme: GlobalThemeOverrides = {
+  common: {
+    // primaryColor: '#7237F1',
+    // primaryColorHover: '#945BFF',
+    // primaryColorSuppl: '#5B2BC4',
+    bodyColor: '#030303',
+    // cardColor: '#120F1B',
+  },
+};
 </script>
 
 <template>
-  <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <n-config-provider :theme="darkTheme" :theme-overrides="mainTheme">
+    <Main />
+    <n-global-style />
+  </n-config-provider>
 </template>
 
-<style>
+<style lang="scss">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  height: 100%;
+  box-sizing: border-box;
+
+  & > .n-config-provider {
+    height: inherit;
+    width: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media screen and (max-width: $screen-size-mobile-width) {
+    padding: 0;
+  }
 }
 </style>
