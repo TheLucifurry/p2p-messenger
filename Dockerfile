@@ -15,4 +15,6 @@ RUN cd ./client && npm run build
 
 EXPOSE 8080
 
+ENV PORT=8080
+
 CMD [ "node", "backend/src/index.js" ]
