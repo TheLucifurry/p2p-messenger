@@ -1,0 +1,13 @@
+{
+  "name": "server",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "launch": "node ./src/index.js"
+  },
+  "author": "Lucifurry",
+  "dependencies": {
+    "node-static": "^0.7.11"
+  }
+}
