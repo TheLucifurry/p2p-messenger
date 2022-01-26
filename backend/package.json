@@ -8,6 +8,9 @@
   },
   "author": "Lucifurry",
   "dependencies": {
-    "node-static": "^0.7.11"
+    "koa": "^2.13.4",
+    "koa-static": "^5.0.0",
+    "koa-websocket": "^6.0.0",
+    "short-uuid": "^4.2.0"
   }
 }

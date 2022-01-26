@@ -1,6 +1,10 @@
+const KoaStatic = require('koa-static');
 
-const NodeStatic = require('node-static');
+function createStaticServerMiddleware(path, options) {
+  const staticServer = KoaStatic(path, options);
+  return staticServer;
+};
 
-module.exports = function createStaticServer(path, options) {
-  return new NodeStatic.Server(path, options);
+module.exports = {
+  createStaticServerMiddleware,
 };
