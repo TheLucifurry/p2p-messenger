@@ -4,10 +4,12 @@ import IconShare from '@vicons/fluent/ShareAndroid24Filled';
 import IconSend from '@vicons/fluent/Send28Filled';
 
 import { ref } from 'vue';
+import { useMessage } from 'naive-ui';
 import { ChatMsg, EMsgType } from '@/types/messages';
 import { useStoreChat } from '@/stores/chat';
 
 const storeChat = useStoreChat();
+const message = useMessage();
 const inputMessage = ref('');
 
 function sendMessage() {
@@ -28,13 +30,21 @@ function onInputMessageKeyupEnter(e: KeyboardEvent) {
 function onButtonSendClick() {
   sendMessage();
 }
+function onButtonShareClick() {
+  const chatURL = storeChat.getChatURL;
+  if (!chatURL) return;
+  navigator.clipboard.writeText(chatURL)
+    .then(() => {
+      message.success('Copied to clipboard');
+    });
+}
 </script>
 
 <template>
-  <n-card title="Serverless Chat" class="chat" :bordered="false">
+  <n-card title="P2P Chat" class="chat" :bordered="false">
     <template #header-extra>
       <!-- <header class="chat__header"> -->
-      <n-button text style="font-size: 28px; margin-right: 14px">
+      <n-button text style="font-size: 28px; margin-right: 14px" @click="onButtonShareClick">
         <n-icon>
           <IconShare />
         </n-icon>

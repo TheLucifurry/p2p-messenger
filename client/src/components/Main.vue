@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
+import { useStoreChat } from '@/stores/chat';
+
+const storeChat = useStoreChat();
+
+onMounted(() => {
+  storeChat.pageLoaded();
+});
 </script>
 
 <template>

@@ -27,6 +27,8 @@ module.exports = {
     'no-plusplus': 0,
     'no-bitwise': 0,
     'no-nested-ternary': 0,
+    'no-underscore-dangle': 0,
+    'no-restricted-globals': 0,
 
     'max-len': 0,
     'prefer-destructuring': 0, // Conflicts with prohibit of props destructuring

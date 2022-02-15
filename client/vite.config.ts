@@ -6,6 +6,9 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    outDir: '../public',
+  },
   server: {
     port: 3001,
   },

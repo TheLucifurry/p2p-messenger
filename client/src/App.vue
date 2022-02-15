@@ -14,7 +14,9 @@ const mainTheme: GlobalThemeOverrides = {
 
 <template>
   <n-config-provider :theme="darkTheme" :theme-overrides="mainTheme">
-    <Main />
+    <n-message-provider>
+      <Main />
+    </n-message-provider>
     <n-global-style />
   </n-config-provider>
 </template>
