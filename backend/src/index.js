@@ -1,28 +1,32 @@
 const path = require('path');
-const Koa = require('koa');
-// const koaBody = require('koa-body');
-const Config = require('./config');
-const { createStaticServerMiddleware } = require('./services/static');
-const { createSignalingServerMiddleware } = require('./services/signaling');
-// const { createAPI } = require('./api/index');
-const koaWebsocket = require('koa-websocket');
+const fastify = require('fastify');
+const fastifyWebsocket = require('fastify-websocket');
+const fastifyStatic = require('fastify-static');
+const signalingServer = require('./services/signaling');
+const config = require('./config');
 
-const app = koaWebsocket(new Koa());
+const app = fastify({
+  logger: config.DEV_MODE ? {
+    prettyPrint: { translateTime: 'HH:MM:ss Z', ignore: 'pid,hostname' },
+  } : false,
+});
 
-app.ws.use(
-  createSignalingServerMiddleware(),
-);
+const staticFilesPath = path.join(__dirname, '../../', config.STATIC_FILES_DIR);
+app.register(fastifyStatic, {
+  root: staticFilesPath,
+})
 
-app.use(
-  createStaticServerMiddleware(path.resolve(Config.STATIC_FILES_DIR), { maxage: 3600 * 6 }),
-);
+app
+  .register(fastifyWebsocket, {
+    options: {
+      maxPayload: 1024,
+    }
+  })
+  .register(signalingServer, { prefix: '/signaling/' });
 
-// app.use(koaBody());
-
-// app.use(
-//   createAPI(),
-// );
-
-app.listen(Config.PORT, () => {
-  console.log(`\t[ App listening on port ${Config.PORT} ]`);
+app.listen(config.PORT, (err) => {
+  if (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
 });

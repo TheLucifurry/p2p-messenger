@@ -14,6 +14,15 @@ class ChatsStore {
   deleteChat(chatId) {
     this.data.delete(chatId);
   }
+
+  getOwnerId(chatId) {
+    return this.data.get(chatId)?.[0];
+  }
+
+  isChatHasUser(chatId, userId) {
+    const chat = this.data.get(chatId) || [];
+    return chat.includes(userId);
+  }
 }
 
 const chatsStore = new ChatsStore();

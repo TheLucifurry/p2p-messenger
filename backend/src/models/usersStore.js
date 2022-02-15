@@ -15,6 +15,10 @@ class UsersStore {
     this.data.delete(id)
     return id;
   }
+
+  getUser(id) {
+    return this.data.get(id);
+  }
 }
 
 const usersStore = new UsersStore();
