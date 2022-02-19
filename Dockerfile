@@ -14,12 +14,13 @@ WORKDIR /app
 COPY --from=build_client /public ./public
 
 COPY ./backend/package*.json ./backend/
-RUN cd ./backend && npm i
+RUN cd ./backend && npm i --only=prod
 
-COPY ./backend/. ./backend/
+COPY ./backend/. ./backend
 
 EXPOSE 8080
 
 ENV PORT=8080
+ENV MODE='PROD'
 
 CMD [ "node", "backend/src/index.js" ]
