@@ -27,8 +27,8 @@ async function signalingServer(app) {
 
     // TODO: useless peers cleaning
     // ctx.websocket.on('close', () => {
-    //   deleteUser(userid);
-    //   console.log('\tUser deleted: ' + userid);
+    //   deleteUser(userId);
+    //   console.log('\tUser deleted: ' + userId);
     // });
   })
 }

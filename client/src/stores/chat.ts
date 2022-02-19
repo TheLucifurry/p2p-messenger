@@ -20,7 +20,7 @@ function createChatMessage(type: EMsgType, data: ChatMsgData): ChatMsg {
   };
 }
 
-export const useStoreChat = defineStore('partitura', {
+export const useStoreChat = defineStore('chat', {
   state: () => ({
     userId: null,
     chatId: null,
