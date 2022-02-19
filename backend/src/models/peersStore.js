@@ -1,28 +1,28 @@
 const shortUUID = require('short-uuid');
 
-class UsersStore {
+class PeersStore {
   constructor() {
     this.data = new Map();
   }
 
-  createUser(ctx) {
+  create(ctx) {
     const id = shortUUID.generate();
     this.data.set(id, ctx)
     return id;
   }
 
-  deleteUser(id) {
+  delete(id) {
     this.data.delete(id)
     return id;
   }
 
-  getUser(id) {
+  get(id) {
     return this.data.get(id);
   }
 }
 
-const usersStore = new UsersStore();
+const peersStore = new PeersStore();
 
 module.exports = {
-  usersStore,
+  peersStore,
 };

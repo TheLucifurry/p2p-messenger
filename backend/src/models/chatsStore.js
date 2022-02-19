@@ -19,9 +19,9 @@ class ChatsStore {
     return this.data.get(chatId)?.[0];
   }
 
-  isChatHasUser(chatId, userId) {
+  isChatHasPeer(chatId, peerId) {
     const chat = this.data.get(chatId) || [];
-    return chat.includes(userId);
+    return chat.includes(peerId);
   }
 }
 

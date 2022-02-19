@@ -4,6 +4,7 @@ const fastifyWebsocket = require('fastify-websocket');
 const fastifyStatic = require('fastify-static');
 const signalingServer = require('./services/signaling');
 const config = require('./config');
+const createAPI = require('./api');
 
 const app = fastify({
   logger: config.DEV_MODE ? {
@@ -15,6 +16,9 @@ const staticFilesPath = path.join(__dirname, '../../', config.STATIC_FILES_DIR);
 app.register(fastifyStatic, {
   root: staticFilesPath,
 })
+
+
+app.register(createAPI, { prefix: '/api/' })
 
 app
   .register(fastifyWebsocket, {

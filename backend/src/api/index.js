@@ -1,30 +1,23 @@
 const { chatsStore } = require('../models/chatsStore');
-const JSONParse = require('../utils/JSONParse');
-const Koa = require('koa');
 
-function createAPI() {
-  /**
-   * @param {Koa.Context} ctx
-   */
-  return async (ctx) => {
-    const body = ctx.request.body;
+async function createAPI(route) {
 
-    switch (ctx.url) {
-      case '/chat/create':
-        if (body?.userid) {
-          const chatid = await chatsStore.createChat(body.userid);
-          ctx.status = 200;
-          ctx.body = JSON.stringify({ chatid });
-        }
-        break;
+  route.get('/chat/create/:peerId', async (request, reply) => {
+    const { peerId } = request.params
+    const chatId = await chatsStore.createChat(peerId);
+    reply.send({ chatId });
+  });
 
-      default:
-        ctx.status = 404;
-        break;
+  route.get('/chat/join/:chatId/:peerId', async (request, reply) => {
+    const { chatId, peerId } = request.params;
+    if (chatsStore.isChatHasPeer(chatId, peerId)) {
+      reply.send({ peerId: null });
+      return;
     }
-  };
+    const chatAdminPeerId = chatsStore.getOwnerId(chatId);
+    reply.send({ peerId: chatAdminPeerId });
+  });
+
 }
 
-module.exports = {
-  createAPI
-};
+module.exports = createAPI;
