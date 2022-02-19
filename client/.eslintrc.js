@@ -31,6 +31,7 @@ module.exports = {
     'no-restricted-globals': 0,
 
     'max-len': 0,
+    'default-case': 0,
     'prefer-destructuring': 0, // Conflicts with prohibit of props destructuring
 
     'import/extensions': 0,

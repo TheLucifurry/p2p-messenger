@@ -3,13 +3,12 @@ import { ChatMsg, ChatMsgData, EMsgType } from '@/types/messages';
 import { getDateTimeNowAsString } from '@/helpers/datetime';
 import API from '@/api';
 import { createChatURL, parseChatFromURL } from '@/helpers/URL';
-import { RTCController } from '@/helpers/RTCController';
+import { P2PConnection } from '@/helpers/P2PConnection';
 
 type State = {
   userId: string | null
   chatId: string | null
-  chatAdminUserId: string | null
-  rtcc: RTCController
+  p2pc: P2PConnection
   messages: ChatMsg[]
 }
 
@@ -25,7 +24,7 @@ export const useStoreChat = defineStore('partitura', {
   state: () => ({
     userId: null,
     chatId: null,
-    rtcc: new RTCController(),
+    p2pc: new P2PConnection(),
     messages: [
       {
         type: EMsgType.EVENT,
@@ -50,48 +49,42 @@ export const useStoreChat = defineStore('partitura', {
   },
   actions: {
     async pageLoaded() {
-      const peerId = await API.chat.socketSetup();
-      if (peerId === null) return;
-      this.userId = peerId;
+      await this.p2pc.init(`ws://${location.host}/signaling/`);
+
+      const peerId = this.p2pc.localPeerId;
+
+      if (!peerId) {
+        console.error('Can\'t start, no peerId');
+        return;
+      }
 
       const connectToChatId = parseChatFromURL(location.href);
       if (connectToChatId) {
         this.chatId = connectToChatId;
-        this.rtcc.init(undefined, true);
         this.joinChat(connectToChatId);
       } else {
-        this.rtcc.init();
-        this.createChat(this.userId);
+        this.createChat(peerId);
       }
 
       // !DEBUG
       // @ts-ignore
-      window.RTCC = this.rtcc;
+      window.P2PC = this.p2pc;
     },
     async createChat(creatorUserId: string) {
       this.chatId = await API.chat.create(creatorUserId);
       console.log(`\tCreated chat id: ${this.chatId}`);
 
-      API.chat.onReadyToOffer(async (fromUser) => {
-        const offer = await this.rtcc.makeOffer();
-        if (offer === null) return;
-        API.chat.sendOffer(fromUser, offer);
-        API.chat.onAnswer((answer) => {
-          this.rtcc.receiveAnswer(answer);
-
-          this.rtcc.sendMessage('Hello P2P!');
-        });
-      });
+      this.p2pc.listen();
     },
     async joinChat(chatId: string) {
-      this.chatAdminUserId = await API.chat.join(chatId);
-      API.chat.onOffer(async (offer) => {
-        const answer = await this.rtcc.handleOffer(offer);
-        if (answer === null) return;
-        API.chat.sendAnswer(this.chatId as string, offer);
-      });
-      // API.chat.socketClose();
+      const chatAdminPeerId = await API.chat.join(chatId, this.p2pc.localPeerId as string);
+      if (!chatAdminPeerId) {
+        console.error('Chat admin\'s peer ID wasn\'t received after trying to join the chat');
+        return;
+      }
+      this.p2pc.connect(chatAdminPeerId);
     },
+
     addUserMessage(msgText: string) {
       this.messages.push(
         createChatMessage(EMsgType.OUT, msgText),
