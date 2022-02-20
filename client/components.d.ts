@@ -9,14 +9,6 @@ declare module 'vue' {
     ChatMessage: typeof import('./src/components/ChatMessage.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     Main: typeof import('./src/components/Main.vue')['default']
-    NButton: typeof import('naive-ui')['NButton']
-    NCard: typeof import('naive-ui')['NCard']
-    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
-    NGlobalStyle: typeof import('naive-ui')['NGlobalStyle']
-    NIcon: typeof import('naive-ui')['NIcon']
-    NInput: typeof import('naive-ui')['NInput']
-    NMessageProvider: typeof import('naive-ui')['NMessageProvider']
-    NTime: typeof import('naive-ui')['NTime']
   }
 }
 
