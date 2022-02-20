@@ -5,7 +5,7 @@ import IconSend from '@vicons/fluent/Send28Filled';
 
 import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
-import { ChatMsg, EMsgType } from '@/types/messages';
+import { ChatMsg } from '@/types/messages';
 import { useStoreChat } from '@/stores/chat';
 
 const storeChat = useStoreChat();
@@ -15,8 +15,12 @@ const inputMessage = ref('');
 function sendMessage() {
   const messageText = inputMessage.value.trim();
   if (!messageText) return;
-  storeChat.addUserMessage(messageText);
+  storeChat.sendChatMessage(messageText);
   inputMessage.value = '';
+}
+
+function checkChatMessageMustBeLeftSided(chatMessage: ChatMsg): boolean {
+  return storeChat.p2pc.localPeerId === chatMessage.sender;
 }
 
 // Handlers
@@ -58,8 +62,8 @@ function onButtonShareClick() {
     </template>
     <div class="chat__body">
       <div v-for="(msg, ix) in storeChat.getMessages" :key="ix" class="chat__row">
-        <ChatEvent v-if="msg.type === EMsgType.EVENT" :message="msg" />
-        <ChatMessage v-else :message="msg" :is-left-sided="msg.type === EMsgType.OUT" />
+        <ChatEvent v-if="msg.sender === null" :message="msg" />
+        <ChatMessage v-else :message="msg" :is-left-sided="checkChatMessageMustBeLeftSided(msg)" />
       </div>
     </div>
     <template #action>

@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { PropType } from 'vue';
-import { ChatMsg, EEventType, EMsgType } from '@/types/messages';
+import { ChatMsg, EEventType } from '@/types/messages';
 
 const props = defineProps({
   message: {
     type: Object as PropType<ChatMsg>,
     required: true,
-    validator(value: ChatMsg) {
-      return value.type === EMsgType.EVENT;
-    },
   },
 });
 
@@ -17,7 +14,7 @@ const chatEvents = [
 ];
 
 function getEventText(data: EEventType) {
-  return chatEvents[data];
+  return typeof data === 'number' ? chatEvents[data] : data;
 }
 </script>
 

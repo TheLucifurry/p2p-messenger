@@ -3,9 +3,10 @@ import { darkTheme, GlobalThemeOverrides } from 'naive-ui';
 
 const mainTheme: GlobalThemeOverrides = {
   common: {
-    // primaryColor: '#7237F1',
-    // primaryColorHover: '#945BFF',
-    // primaryColorSuppl: '#5B2BC4',
+    primaryColor: '#E29863',
+    primaryColorHover: '#E7C67F',
+    primaryColorPressed: '#CE7D5A',
+    primaryColorSuppl: '#945F2A',
     bodyColor: '#030303',
     // cardColor: '#120F1B',
   },

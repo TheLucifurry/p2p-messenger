@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { PropType } from 'vue';
-import { ChatMsg, EMsgType } from '@/types/messages';
+import {
+  nextTick, onMounted, PropType, ref,
+} from 'vue';
+import { ChatMsg } from '@/types/messages';
 import { parseDate } from '@/helpers/datetime';
+
+const chatMessageCardOpacity = ref(0);
+
+// TODO: refactor appear animation logic
+onMounted(() => {
+  setTimeout(() => {
+    nextTick(() => {
+      chatMessageCardOpacity.value = 1;
+    });
+  }, 0);
+});
 
 const props = defineProps({
   message: {
     type: Object as PropType<ChatMsg>,
     required: true,
-    validator(value: ChatMsg) {
-      return value.type !== EMsgType.EVENT;
-    },
   },
   isLeftSided: {
     type: Boolean,
@@ -40,6 +50,9 @@ const props = defineProps({
   border-radius: 4px;
   margin: 0 var(--sz-side-margin);
   position: relative;
+
+  opacity: v-bind(chatMessageCardOpacity);
+  transition: opacity 0.5s;
 
   &:not(.chat-message--left-sided)::before {
     position: absolute;

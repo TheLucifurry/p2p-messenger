@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useMessage } from 'naive-ui';
 import { useStoreChat } from '@/stores/chat';
 
 const storeChat = useStoreChat();
+
+// See: src/types/globals.d.ts
+window.$message = useMessage();
 
 onMounted(() => {
   storeChat.pageLoaded();

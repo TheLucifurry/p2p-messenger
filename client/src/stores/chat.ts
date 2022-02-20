@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { ChatMsg, ChatMsgData, EMsgType } from '@/types/messages';
+import { useMessage } from 'naive-ui';
+import { ChatMsg, ChatMsgData } from '@/types/messages';
 import { getDateTimeNowAsString } from '@/helpers/datetime';
 import API from '@/api';
 import { createChatURL, parseChatFromURL } from '@/helpers/URL';
@@ -12,9 +13,9 @@ type State = {
   messages: ChatMsg[]
 }
 
-function createChatMessage(type: EMsgType, data: ChatMsgData): ChatMsg {
+function createChatMessage(sender: string | null, data: ChatMsgData): ChatMsg {
   return {
-    type,
+    sender,
     data,
     time: getDateTimeNowAsString(),
   };
@@ -25,23 +26,7 @@ export const useStoreChat = defineStore('chat', {
     userId: null,
     chatId: null,
     p2pc: new P2PConnection(),
-    messages: [
-      {
-        type: EMsgType.EVENT,
-        time: getDateTimeNowAsString(),
-        data: 0,
-      },
-      {
-        type: EMsgType.OUT,
-        time: getDateTimeNowAsString(),
-        data: 'Hello WebRTC!',
-      },
-      {
-        type: EMsgType.IN,
-        time: getDateTimeNowAsString(),
-        data: 'Who are you?',
-      },
-    ],
+    messages: [],
   } as State),
   getters: {
     getMessages: (state) => state.messages,
@@ -49,12 +34,16 @@ export const useStoreChat = defineStore('chat', {
   },
   actions: {
     async pageLoaded() {
-      await this.p2pc.init(`ws://${location.host}/signaling/`);
+      try {
+        await this.p2pc.init(`ws://${location.host}/signaling/`);
+      } catch (error: any) {
+        window.$message.error(error.message);
+      }
 
       const peerId = this.p2pc.localPeerId;
 
       if (!peerId) {
-        console.error('Can\'t start, no peerId');
+        window.$message.error('Can\'t start, no peerId');
         return;
       }
 
@@ -66,29 +55,44 @@ export const useStoreChat = defineStore('chat', {
         this.createChat(peerId);
       }
 
+      this.p2pc.onMessage((type, data) => {
+        switch (type) {
+          case 'CHAT_MSG': {
+            this.receiveChatMessage(data);
+            break;
+          }
+        }
+      }, this);
+
       // !DEBUG
       // @ts-ignore
       window.P2PC = this.p2pc;
     },
     async createChat(creatorUserId: string) {
       this.chatId = await API.chat.create(creatorUserId);
-      console.log(`\tCreated chat id: ${this.chatId}`);
+      window.$message.info('Chat created.\nShare link to it with another user via "share" button');
 
-      this.p2pc.listen();
+      await this.p2pc.listen();
+      this.sendChatMessage('You have created the chat', true);
     },
     async joinChat(chatId: string) {
       const chatAdminPeerId = await API.chat.join(chatId, this.p2pc.localPeerId as string);
       if (!chatAdminPeerId) {
-        console.error('Chat admin\'s peer ID wasn\'t received after trying to join the chat');
+        window.$message.error('Chat admin\'s peer ID wasn\'t received after trying to join the chat');
         return;
       }
-      this.p2pc.connect(chatAdminPeerId);
+      await this.p2pc.connect(chatAdminPeerId);
+      this.sendChatMessage('You have joined the chat', true);
     },
 
-    addUserMessage(msgText: string) {
-      this.messages.push(
-        createChatMessage(EMsgType.OUT, msgText),
-      );
+    sendChatMessage(msgText: string, isThirdParty = false) {
+      const msg: ChatMsg = createChatMessage(isThirdParty ? null : this.p2pc.localPeerId, msgText);
+      this.messages.push(msg);
+      this.p2pc.send('CHAT_MSG', msg);
+    },
+
+    receiveChatMessage(msg: ChatMsg) {
+      this.messages.push(msg);
     },
   },
 });

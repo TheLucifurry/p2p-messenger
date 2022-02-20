@@ -35,7 +35,7 @@ export function createSignalingServerConnection(
 
     const timer = setTimeout(() => {
       interrupt('Connection to signaling server timed out');
-    }, 5000);
+    }, 3000);
 
     ws.onopen = () => {
       ws.addEventListener('message', (event) => {
@@ -107,8 +107,8 @@ export class P2PConnection {
     // TODO: clean code
     const isClient = false;
     this.lc = this.pc.createDataChannel(isClient ? 'Client' : 'Host');
-    this.lc.onclose = () => console.log(`${this.lc.label} channel has OPENED`);
-    this.lc.onopen = () => console.log(`${this.lc.label} channel has CLOSED`);
+    // this.lc.onclose = () => console.log(`${this.lc.label} channel has CLOSED`);
+    // this.lc.onopen = () => console.log(`${this.lc.label} channel has OPENED`);
 
     // TODO: clean code
     //   // Setup ice handling
@@ -120,13 +120,6 @@ export class P2PConnection {
     //     });
     //   }
     // };
-    // TODO: clean code
-    this.pc.ondatachannel = (event) => {
-      const remoteChannel = event.channel;
-      remoteChannel.onopen = () => console.log('Remote channel has OPENED');
-      remoteChannel.onclose = () => console.log('Remote channel has CLOSED');
-      remoteChannel.onmessage = (e) => console.log(`Message from DataChannel '${remoteChannel.label}' payload '${e.data}'`);
-    };
   }
 
   private async connectToSignalingServer(url: string) {
@@ -160,8 +153,6 @@ export class P2PConnection {
       target: this.remotePeerId,
       body: { type, data },
     };
-    console.log(`\nSent signal message "${type}":`);
-    console.table(data);
     if (this.state !== P2PConnectionState.READY_TO_CONNECT) {
       throw new Error('P2PConnection: Not ready to connect'); // TODO: normalize exceptions handling
     }
@@ -208,7 +199,6 @@ export class P2PConnection {
 
   // State CONNECTION_PROCESS
   async connect(remotePeerId: string) {
-    console.log('\t CALLED connect():');
     if (this.state !== P2PConnectionState.READY_TO_CONNECT) {
       throw new Error('P2PConnection: Not ready to connect'); // TODO: normalize exceptions handling
     }
@@ -223,7 +213,6 @@ export class P2PConnection {
   }
 
   async listen() {
-    console.log('\t CALLED listen():');
     if (this.state !== P2PConnectionState.READY_TO_CONNECT) {
       throw new Error('P2PConnection: Not ready to connect'); // TODO: normalize exceptions handling
     }
@@ -233,8 +222,22 @@ export class P2PConnection {
   // State CONNECTED
   send(type: string, data: any) {
     const message = { type, data };
-    console.log(`\nSent message "${type}":`);
-    console.dir(data);
     this.lc.send(JSON.stringify(message));
+  }
+
+  onMessage<Context>(callback: (this: Context, type: string, data: any)=>void, context: Context) {
+    this.pc.ondatachannel = (event) => {
+      const remoteChannel = event.channel;
+      // remoteChannel.onopen = () => console.log('Remote channel has OPENED');
+      // remoteChannel.onclose = () => console.log('Remote channel has CLOSED');
+      remoteChannel.onmessage = (e) => {
+        const message = JSONParse(e.data);
+        if (typeof message.type !== 'string' || !message.data) {
+          console.error(`P2PConnection: received incorrect message from peer "${this.remotePeerId}"`);
+          return;
+        }
+        callback.call(context, message.type, message.data);
+      };
+    };
   }
 }
