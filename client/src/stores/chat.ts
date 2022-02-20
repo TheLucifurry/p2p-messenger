@@ -21,6 +21,8 @@ function createChatMessage(sender: string | null, data: ChatMsgData): ChatMsg {
   };
 }
 
+const isDevMode = process.env.NODE_ENV === 'development';
+
 export const useStoreChat = defineStore('chat', {
   state: () => ({
     userId: null,
@@ -35,7 +37,7 @@ export const useStoreChat = defineStore('chat', {
   actions: {
     async pageLoaded() {
       try {
-        await this.p2pc.init(`ws://${location.host}/signaling/`);
+        await this.p2pc.init(`ws${isDevMode ? '' : 's'}://${location.host}/signaling/`);
       } catch (error: any) {
         window.$message.error(error.message);
       }
