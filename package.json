@@ -1,8 +1,10 @@
 {
+  "name": "p2p-messenger",
   "scripts": {
-    "app_build": "docker build -t lucifurry/p2p-messenger .",
-    "app_run_devmode": "docker run -p 8080:8080 lucifurry/p2p-messenger -e \"MODE=DEV\"",
-    "app_run": "docker run -p 8080:8080 lucifurry/p2p-messenger",
-    "app_push": "docker push lucifurry/p2p-messenger:latest"
+    "app_build": "docker build -t p2p-messenger .",
+    "app_run_devmode": "docker run -p 8080:8080 p2p-messenger -e \"MODE=DEV\"",
+    "app_run": "docker run -p 8080:8080 p2p-messenger",
+    "app_push": "docker push p2p-messenger:latest",
+    "deploy": "heroku container:push web -a p2p-messenger && heroku container:release web -a p2p-messenger"
   }
 }
