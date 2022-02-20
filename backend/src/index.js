@@ -23,7 +23,7 @@ app.register(createAPI, { prefix: '/api/' })
 app
   .register(fastifyWebsocket, {
     options: {
-      maxPayload: 1024,
+      maxPayload: 1024 * 32,
     }
   })
   .register(signalingServer, { prefix: '/signaling/' });
