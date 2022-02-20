@@ -1,3 +1,6 @@
-# serverless-chat
+# P2P Messenger
 
-Open app: https://serverless-chat.herokuapp.com/
+## Nahuya?
+  Just simple pet project, made to learn and practice WebRTC technology
+
+Open app: https://p2p-messenger.herokuapp.com/

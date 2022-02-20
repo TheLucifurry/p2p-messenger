@@ -28,7 +28,7 @@ app
   })
   .register(signalingServer, { prefix: '/signaling/' });
 
-app.listen(config.PORT, (err) => {
+app.listen(config.PORT, config.DEV_MODE ? undefined : '0.0.0.0', (err) => {
   if (err) {
     app.log.error(err);
     process.exit(1);

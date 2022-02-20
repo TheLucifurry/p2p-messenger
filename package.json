@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "app_build": "docker build -t lucifurry/p2p-chat .",
-    "app_run_dev": "docker run -p 8080:8080 lucifurry/p2p-chat -e \"MODE=DEV\"",
-    "app_run": "docker run -p 8080:8080 lucifurry/p2p-chat"
+    "app_build": "docker build -t lucifurry/p2p-messenger .",
+    "app_run_devmode": "docker run -p 8080:8080 lucifurry/p2p-messenger -e \"MODE=DEV\"",
+    "app_run": "docker run -p 8080:8080 lucifurry/p2p-messenger",
+    "app_push": "docker push lucifurry/p2p-messenger:latest"
   }
 }
