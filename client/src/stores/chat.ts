@@ -75,7 +75,7 @@ export const useStoreChat = defineStore('chat', {
       window.$message.info('Chat created.\nShare link to it with another user via "share" button');
 
       await this.p2pc.listen();
-      this.sendChatMessage('You have created the chat', true);
+      this.sendChatMessage('You have created the chat', true, true);
     },
     async joinChat(chatId: string) {
       const chatAdminPeerId = await API.chat.join(chatId, this.p2pc.localPeerId as string);
@@ -84,13 +84,15 @@ export const useStoreChat = defineStore('chat', {
         return;
       }
       await this.p2pc.connect(chatAdminPeerId);
-      this.sendChatMessage('You have joined the chat', true);
+      this.sendChatMessage('You have joined the chat', true, true);
     },
 
-    sendChatMessage(msgText: string, isThirdParty = false) {
+    sendChatMessage(msgText: string, isThirdParty = false, isLocalOnly = false) {
       const msg: ChatMsg = createChatMessage(isThirdParty ? null : this.p2pc.localPeerId, msgText);
       this.messages.push(msg);
-      this.p2pc.send('CHAT_MSG', msg);
+      if (!isLocalOnly) {
+        this.p2pc.send('CHAT_MSG', msg);
+      }
     },
 
     receiveChatMessage(msg: ChatMsg) {

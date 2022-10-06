@@ -2,6 +2,7 @@ import { JSONParse } from '@/helpers/JSONParse';
 
 const defaultConfig: RTCConfiguration = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  // sdpSemantics: 'unified-plan', // Is this option deprecated?
 };
 
 type SSMessageBody = {
@@ -9,12 +10,15 @@ type SSMessageBody = {
   data: any
 }
 
-type SSMessageTypes = 'OFFER' | 'ANSWER';
+type SSMessageTypes = 'ICE' | 'OFFER' | 'ANSWER';
 
 type SignalingServerMessage = {
   sender: string,
   body: SSMessageBody
 }
+
+// eslint-disable-next-line no-promise-executor-return
+const delay = (T: number) => new Promise((_) => setTimeout(_, T));
 
 export function createSignalingServerConnection(
   url: string,
@@ -93,10 +97,12 @@ export class P2PConnection {
 
   private lc!: RTCDataChannel; // Local channel
 
+  private icec: RTCIceCandidate[] = []; // ICE Candidates
+
   // State INIT
   async init(signalingServerURL: string) {
     await this.connectToSignalingServer(signalingServerURL);
-    this.createRTCConnection();
+    await this.createRTCConnection();
     this.state = P2PConnectionState.READY_TO_CONNECT;
   }
 
@@ -107,19 +113,54 @@ export class P2PConnection {
     // TODO: clean code
     const isClient = false;
     this.lc = this.pc.createDataChannel(isClient ? 'Client' : 'Host');
-    // this.lc.onclose = () => console.log(`${this.lc.label} channel has CLOSED`);
-    // this.lc.onopen = () => console.log(`${this.lc.label} channel has OPENED`);
+    this.lc.onclose = () => console.log(`${this.lc.label} channel has CLOSED`);
+    this.lc.onopen = () => console.log(`${this.lc.label} channel has OPENED`);
 
     // TODO: clean code
     //   // Setup ice handling
-    // this.pc.onicecandidate = function (event) {
-    //   if (event.candidate) {
-    //     send({
-    //       type: "candidate",
-    //       candidate: event.candidate
-    //     });
-    //   }
-    // };
+    this.pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        console.log('\n\tonicecandidate:');
+        console.dir({ icec: event.candidate });
+        // this.icec.push(event.candidate);
+        this.sendSignal('ICE', event.candidate);
+      }
+    };
+
+    // return new Promise((res, rej) => {
+    const peerId = '(...)';
+
+    //   const timer = setTimeout(() => {
+    //     console.log(`iceConnectionState is timed out, closing connections to ${peerId}`);
+    //     rej();
+    //   }, 5000);
+
+    this.pc.oniceconnectionstatechange = () => {
+      // Source: https://github.com/peers/peerjs/blob/cfc37c7988d8ef3d2c1d7b6123562dd2af59defc/lib/negotiator.ts#L84
+      switch (this.pc.iceConnectionState) {
+        case 'failed':
+          console.log(`iceConnectionState is failed, closing connections to ${peerId}`);
+          // this.connection.close();
+          // rej();
+          break;
+        case 'closed':
+          console.log(`iceConnectionState is closed, closing connections to ${peerId}`);
+          // this.connection.close();
+          break;
+        case 'disconnected':
+          console.log(`iceConnectionState changed to disconnected on the connection with ${peerId}`);
+          break;
+        case 'completed':
+          // this.pc.onicecandidate = util.noop;
+          console.log('\t[ oniceconnectionstatechange finished ]');
+          // clearTimeout(timer);
+          // res(null);
+          break;
+      }
+
+      // this.connection.emit(ConnectionEventType.IceStateChanged, peerConnection.iceConnectionState);
+    };
+    // });
   }
 
   private async connectToSignalingServer(url: string) {
@@ -139,13 +180,7 @@ export class P2PConnection {
       .then((description) => this.pc.setLocalDescription(description))
       .catch(console.error); // TODO: Improve exception handling
 
-    return new Promise((res) => {
-      this.pc.onicecandidate = (event) => {
-        if (event.candidate !== null) return;
-        const sdp = this.pc.localDescription;
-        res(sdp);
-      };
-    });
+    return this.pc.localDescription;
   }
 
   private sendSignal(type: SSMessageTypes, data: any) {
@@ -169,30 +204,32 @@ export class P2PConnection {
 
     if (this.isInitiator === null) return;
 
-    if (this.isInitiator) { // Initiator makes offer
-      switch (type) {
-        case 'ANSWER': {
-          const sdp = data;
-          this.pc.setRemoteDescription(new RTCSessionDescription(sdp));
-          break;
-        }
+    switch (type) {
+      case 'ICE': { // Initiator receives from Listener
+        const candidate = data;
+        console.log('onSSMessageHandler received ICE signal:');
+        console.dir({ candidate });
+        this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+        break;
       }
-    } else { // Non-initiator just answers
-      switch (type) {
-        case 'OFFER': {
-          const offer = data;
-          const sender = message.sender;
-          this.remotePeerId = sender;
-          await this.pc.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await this.pc.createAnswer();
-          await this.pc.setLocalDescription(answer);
-          if (answer === null) {
-            console.error('P2PConnection: Error');
-            return;
-          }
-          this.sendSignal('ANSWER', answer);
-          break;
+      case 'OFFER': { // Initiator receives from Listener
+        const offer = data;
+        const sender = message.sender;
+        this.remotePeerId = sender;
+        await this.pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await this.pc.createAnswer();
+        await this.pc.setLocalDescription(answer);
+        if (answer === null) {
+          console.error('P2PConnection: Error');
+          return;
         }
+        this.sendSignal('ANSWER', answer);
+        break;
+      }
+      case 'ANSWER': { // Listener receives from Initiator
+        const sdp = data;
+        this.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        break;
       }
     }
   }
@@ -208,7 +245,16 @@ export class P2PConnection {
     if (!offer) {
       throw new Error('P2PConnection: Can\'t make offer'); // TODO: normalize exceptions handling
     }
+    console.log('\tawait ICE condidated handling...');
+    await delay(2000);
+
+    console.log('\tsend offer');
     this.sendSignal('OFFER', offer);
+
+    // console.log('ICE Candidates:');
+    // console.dir(this.icec);
+    // this.sendSignal('ICE', this.icec[0]);
+
     // TODO: make rejecting by timer
   }
 
